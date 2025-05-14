@@ -150,6 +150,21 @@ async def status_handler(message: Message):
     await message.answer(text, parse_mode="HTML")
 
 
+@dp.message(Command("update_site"))
+@only_owner
+async def deploy_site_handler(message: Message):
+    try:
+        result = subprocess.run(
+            ["/home/finler6/portfolio-site/update.sh"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        await message.answer(f"✅ Сайт обновлён:\n<code>{result.stdout}</code>", parse_mode="HTML")
+    except subprocess.CalledProcessError as e:
+        await message.answer(f"❌ Ошибка обновления:\n<code>{e.stderr}</code>", parse_mode="HTML")
+
+
 @dp.message(Command("commit_force"))
 @only_owner
 async def commit_force_handler(message: Message):
