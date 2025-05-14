@@ -210,7 +210,10 @@ async def exec_handler(message: Message):
         await message.answer("❗ Please provide a command: /exec <command>")
         return
     try:
+        print(f"[EXEC] Running: {cmd}", flush=True)
         output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
+        if not output.strip():
+            output = "[empty output]"
         if len(output) > 4000:
             output = output[:4000] + "\n... (output truncated)"
         await message.answer(f"🧪 <b>Result:</b>\n<code>{output.strip()}</code>", parse_mode="HTML")
