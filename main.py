@@ -132,7 +132,7 @@ async def start_handler(message: Message):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="/status"), KeyboardButton(text="/update_site")],
-            [KeyboardButton(text="/start_pc"), [KeyboardButton(text="/shutdown_pc")],
+            [KeyboardButton(text="/start_pc"), KeyboardButton(text="/shutdown_pc")],
             [KeyboardButton(text="/commit_force <message>"), KeyboardButton(text="/exec <command>")], 
             [KeyboardButton(text="/disk_temp")]
         ],
