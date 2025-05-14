@@ -157,25 +157,30 @@ async def update_site_prompt(message: Message):
 @dp.message()
 @only_owner
 async def handle_confirmation(message: Message):
-    if pending_update_confirmation.get(message.from_user.id):
-        if message.text == "✅ Yes":
-            try:
-                result = subprocess.run(
-                    ["/home/finler6/portfolio-site/update.sh"],
-                    capture_output=True,
-                    text=True
-                )
-                output = result.stdout + "\n" + result.stderr
-                if len(output) > 1000:
-                    output = output[:1000] + "\n... (output truncated)"
-                if result.returncode == 0:
-                    await message.answer(f"✅ Site updated:\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
-                else:
-                    await message.answer(f"❌ Update failed (code {result.returncode}):\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
-            except Exception as e:
-                await message.answer(f"❌ Unexpected error:\n<code>{str(e)}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
-        elif message.text == "❌ No":
-            await message.answer("Update cancelled.", reply_markup=ReplyKeyboardRemove())
+    if message.from_user.id not in pending_update_confirmation:
+        return
+
+    if message.text == "✅ Yes":
+        try:
+            result = subprocess.run(
+                ["/home/finler6/portfolio-site/update.sh"],
+                capture_output=True,
+                text=True
+            )
+            output = result.stdout + "\n" + result.stderr
+            if len(output) > 1000:
+                output = output[:1000] + "\n... (output truncated)"
+            if result.returncode == 0:
+                await message.answer(f"✅ Site updated:\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+            else:
+                await message.answer(f"❌ Update failed (code {result.returncode}):\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+        except Exception as e:
+            await message.answer(f"❌ Unexpected error:\n<code>{str(e)}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+        finally:
+            del pending_update_confirmation[message.from_user.id]
+
+    elif message.text == "❌ No":
+        await message.answer("Update cancelled.", reply_markup=ReplyKeyboardRemove())
         del pending_update_confirmation[message.from_user.id]
 
 @dp.message(Command("commit_force"))
