@@ -101,14 +101,40 @@ async def start_pc_handler(message: Message):
     except Exception as e:
         await message.answer(f"❌ Error:\n<code>{e}</code>", parse_mode="HTML")
 
+@dp.message(Command("shutdown_pc"))
+@only_owner
+async def shutdown_pc_handler(message: Message):
+    try:
+        result = subprocess.run(
+            [
+                "ssh",
+                "-i", "/home/finler6/ssh-bot-key/PCkeys/myPc_ed25519",
+                "finler6@192.168.1.126",
+                "shutdown", "/s", "/t", "0"
+            ],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            await message.answer("🛑 The PC is shutting down.")
+        else:
+            await message.answer(
+                f"❌ Shutdown error (code {result.returncode}):\n<code>{result.stderr}</code>",
+                parse_mode="HTML"
+            )
+    except Exception as e:
+        await message.answer(f"❌ Runtime Error:\n<code>{str(e)}</code>", parse_mode="HTML")
+
+
 @dp.message(Command("start"))
 @only_owner
 async def start_handler(message: Message):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="/status"), KeyboardButton(text="/update_site")],
-            [KeyboardButton(text="/start_pc"), KeyboardButton(text="/commit_force <message>")],
-            [KeyboardButton(text="/exec <command>"), KeyboardButton(text="/disk_temp")]
+            [KeyboardButton(text="/start_pc"), [KeyboardButton(text="/shutdown_pc")],
+            [KeyboardButton(text="/commit_force <message>"), KeyboardButton(text="/exec <command>")], 
+            [KeyboardButton(text="/disk_temp")]
         ],
         resize_keyboard=True
     )
