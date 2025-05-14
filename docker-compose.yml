@@ -12,7 +12,6 @@ services:
       - /sys:/sys:ro
       - /proc:/proc:ro
       - /dev:/dev
-      - /home/finler6/ssh-bot-key/PCkeys/known_hosts:/root/.ssh/known_hosts:ro
       - /home/finler6/ssh-bot-key/PCkeys:/root/.ssh:ro
       - /home/finler6/portfolio-site:/home/finler6/portfolio-site
       - /var/run/docker.sock:/var/run/docker.sock
