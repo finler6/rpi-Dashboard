@@ -12,7 +12,7 @@ services:
       - /sys:/sys:ro
       - /proc:/proc:ro
       - /dev:/dev
-      - ../ssh-bot-key:/root/.ssh:ro
+      - /home/finler6/ssh-bot-key/PCkeys/myPc_ed25519:/root/.ssh/myPc_ed25519:ro
       - /home/finler6/portfolio-site:/home/finler6/portfolio-site
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
