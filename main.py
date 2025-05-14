@@ -160,10 +160,14 @@ async def update_site_handler(message: Message):
             text=True
         )
 
+        output = result.stdout + "\n" + result.stderr
+        if len(output) > 4000:
+            output = output[:4000] + "\n... (output truncated)"
+
         if result.returncode == 0:
-            await message.answer(f"✅ Сайт обновлён:\n<code>{result.stdout}</code>", parse_mode="HTML")
+            await message.answer(f"✅ Сайт обновлён:\n<code>{output}</code>", parse_mode="HTML")
         else:
-            await message.answer(f"❌ Ошибка (код {result.returncode}):\n<code>{result.stderr}</code>", parse_mode="HTML")
+            await message.answer(f"❌ Ошибка (код {result.returncode}):\n<code>{output}</code>", parse_mode="HTML")
 
     except Exception as e:
         await message.answer(f"❌ Неожиданная ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
