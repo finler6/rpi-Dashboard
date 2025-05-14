@@ -97,9 +97,9 @@ async def wifi_status(bot: Bot, chat_id: int):
 async def start_pc_handler(message: Message):
     try:
         wake_pc()
-        await message.answer("🚀 Команда включения ПК отправлена!")
+        await message.answer("🚀 PC power-up command sent!")
     except Exception as e:
-        await message.answer(f"❌ Ошибка:\n<code>{e}</code>", parse_mode="HTML")
+        await message.answer(f"❌ Error:\n<code>{e}</code>", parse_mode="HTML")
 
 @dp.message(Command("start"))
 @only_owner
@@ -107,8 +107,8 @@ async def start_handler(message: Message):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="/status"), KeyboardButton(text="/update_site")],
-            [KeyboardButton(text="/disk_temp"), KeyboardButton(text="/commit_force <message>")],
-            [KeyboardButton(text="/exec <command>")]
+            [KeyboardButton(text="/start_pc"), KeyboardButton(text="/commit_force <message>")],
+            [KeyboardButton(text="/exec <command>"), KeyboardButton(text="/disk_temp")]
         ],
         resize_keyboard=True
     )
@@ -117,6 +117,7 @@ async def start_handler(message: Message):
         "📋 <b>Available Commands:</b>\n"
         "• /status — Show system status\n"
         "• /update_site — 🔄 Pull latest version and restart site\n"
+        "• /start_pc  — 🚀 Start my own PC\n"
         "• /disk_temp — ❄️ Show disk temperature\n"
         "• /commit_force &lt;message&gt; — 🚀 Force-push commit with message\n"
         "• /exec &lt;command&gt; — 🧪 Execute a shell command"
