@@ -108,7 +108,7 @@ async def shutdown_pc_handler(message: Message):
         result = subprocess.run(
             [
                 "ssh",
-                "-i", "/home/finler6/ssh-bot-key/PCkeys/myPc_ed25519",
+                "-i", "/root/.ssh/myPc_ed25519",
                 "finler6@192.168.1.126",
                 "shutdown", "/s", "/t", "0"
             ],
