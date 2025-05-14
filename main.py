@@ -1,5 +1,5 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from aiogram.filters import Command
 from os import getenv, popen
@@ -154,7 +154,7 @@ async def update_site_prompt(message: Message):
     pending_update_confirmation[message.from_user.id] = True
     await message.answer("Are you sure you want to update the site?", reply_markup=keyboard)
 
-@dp.message()
+@dp.message(F.text.in_(["✅ Yes", "❌ No"]))
 @only_owner
 async def handle_confirmation(message: Message):
     if message.from_user.id not in pending_update_confirmation:
