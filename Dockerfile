@@ -4,8 +4,16 @@ RUN apt-get update && apt-get install -y \
     iproute2 \
     smartmontools \
     git \
-    openssh-client \
-    docker.io
+    curl \
+    openssh-client
+
+RUN curl -fsSL https://download.docker.com/linux/static/stable/$(uname -m)/docker-24.0.6.tgz | tar xz && \
+    mv docker/* /usr/bin/
+
+RUN mkdir -p /usr/libexec/docker/cli-plugins && \
+    curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-$(uname -m) \
+    -o /usr/libexec/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
 WORKDIR /app
 
