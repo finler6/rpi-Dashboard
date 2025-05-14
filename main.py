@@ -102,7 +102,7 @@ async def start_handler(message: Message):
         "• /status — Show system status\n"
         "• /update_site — Pull latest version and restart site\n"
         "• /disk_temp — Show disk temperature\n"
-        "• /commit_force <msg> — Force-push commit with message"
+        "• /commit_force &lt;message&gt; — Force-push commit with message"
     )
 
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
