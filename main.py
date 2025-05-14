@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from os import getenv, popen
 from dotenv import load_dotenv
 from functools import wraps
+from wakeonlan import send_magic_packet
 import psutil
 import platform
 import time
@@ -15,12 +16,16 @@ load_dotenv()
 
 TOKEN = getenv("BOT_TOKEN")
 MY_ID = int(getenv("MY_ID"))
+PC_MAC = getenv("PC_MAC")
 
 pending_update_confirmation = {}
 
 dp = Dispatcher()
 
 #----------Addons-------------
+
+def wake_pc():
+    send_magic_packet(PC_MAC)
 
 def get_uptime():
     return time.time() - psutil.boot_time()
@@ -86,6 +91,15 @@ async def wifi_status(bot: Bot, chat_id: int):
         elif connected and notified:
             notified = False
         await asyncio.sleep(120)
+
+@dp.message(Command("start_pc"))
+@only_owner
+async def start_pc_handler(message: Message):
+    try:
+        wake_pc()
+        await message.answer("🚀 Команда включения ПК отправлена!")
+    except Exception as e:
+        await message.answer(f"❌ Ошибка:\n<code>{e}</code>", parse_mode="HTML")
 
 @dp.message(Command("start"))
 @only_owner
