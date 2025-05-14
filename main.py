@@ -152,10 +152,10 @@ async def status_handler(message: Message):
 
 @dp.message(Command("update_site"))
 @only_owner
-async def deploy_site_handler(message: Message):
+async def update_site_handler(message: Message):
     try:
         result = subprocess.run(
-            ["/home/finler6/portfolio-site/update.sh"],
+            [ "/usr/local/bin/update-portfolio.sh" ],
             capture_output=True,
             text=True,
             check=True
