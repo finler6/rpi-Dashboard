@@ -16,6 +16,7 @@ load_dotenv()
 TOKEN = getenv("BOT_TOKEN")
 MY_ID = int(getenv("MY_ID"))
 
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 #----------Addons-------------
@@ -95,7 +96,6 @@ async def start_handler(message: Message):
         ],
         resize_keyboard=True
     )
-
     text = (
         "👋 Hello! I'm your Raspberry Pi status bot.\n\n"
         "📋 <b>Available Commands:</b>\n"
@@ -104,7 +104,6 @@ async def start_handler(message: Message):
         "• /disk_temp — Show disk temperature\n"
         "• /commit_force &lt;message&gt; — Force-push commit with message"
     )
-
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 
 @dp.message(Command("disk_temp"))
@@ -125,13 +124,11 @@ async def status_handler(message: Message):
             temp = int(f.read()) / 1000
     except:
         temp = "N/A"
-
     uptime_sec = int(get_uptime())
     uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_sec))
     hostname = platform.node()
     ip_raw = popen("hostname -I").read().strip()
     ip = ip_raw.split()[0] if ip_raw else "N/A"
-
     text = (
         f"📡 <b>{hostname} — System Status</b>\n"
         f"🧠 CPU: <code>{cpu_text}</code>\n"
@@ -146,12 +143,21 @@ async def status_handler(message: Message):
 @dp.message(Command("update_site"))
 @only_owner
 async def update_site_handler(message: Message):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Yes"), KeyboardButton(text="No")]
+        ],
+        resize_keyboard=True
+    )
+    await message.answer("⚙️ Are you sure you want to update the site?", reply_markup=keyboard)
+
+@dp.message(lambda msg: msg.text == "Yes")
+@only_owner
+async def confirm_update_handler(message: Message):
     try:
-        result = subprocess.run(
-            ["/home/finler6/portfolio-site/update.sh"],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run([
+            "/home/finler6/portfolio-site/update.sh"
+        ], capture_output=True, text=True)
         output = result.stdout + "\n" + result.stderr
         if len(output) > 4000:
             output = output[:4000] + "\n... (output truncated)"
@@ -161,6 +167,11 @@ async def update_site_handler(message: Message):
             await message.answer(f"❌ Update failed (code {result.returncode}):\n<code>{output}</code>", parse_mode="HTML")
     except Exception as e:
         await message.answer(f"❌ Unexpected error:\n<code>{str(e)}</code>", parse_mode="HTML")
+
+@dp.message(lambda msg: msg.text == "No")
+@only_owner
+async def cancel_update_handler(message: Message):
+    await message.answer("❎ Update cancelled.")
 
 @dp.message(Command("commit_force"))
 @only_owner
@@ -182,7 +193,6 @@ async def commit_force_handler(message: Message):
         await message.answer(f"❌ Commit error:\n<code>{e}</code>", parse_mode="HTML")
 
 async def main():
-    bot = Bot(token=TOKEN)
     asyncio.create_task(temperature_watcher(bot, threshold=60.0, chat_id=MY_ID))
     asyncio.create_task(wifi_status(bot, chat_id=MY_ID))
     await dp.start_polling(bot)
