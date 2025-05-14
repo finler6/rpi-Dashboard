@@ -155,14 +155,18 @@ async def status_handler(message: Message):
 async def update_site_handler(message: Message):
     try:
         result = subprocess.run(
-            [ "/usr/local/bin/update-portfolio.sh" ],
+            ["/usr/local/bin/update-portfolio.sh"],
             capture_output=True,
-            text=True,
-            check=True
+            text=True
         )
-        await message.answer(f"✅ Сайт обновлён:\n<code>{result.stdout}</code>", parse_mode="HTML")
-    except subprocess.CalledProcessError as e:
-        await message.answer(f"❌ Ошибка обновления:\n<code>{e.stderr}</code>", parse_mode="HTML")
+
+        if result.returncode == 0:
+            await message.answer(f"✅ Сайт обновлён:\n<code>{result.stdout}</code>", parse_mode="HTML")
+        else:
+            await message.answer(f"❌ Ошибка (код {result.returncode}):\n<code>{result.stderr}</code>", parse_mode="HTML")
+
+    except Exception as e:
+        await message.answer(f"❌ Неожиданная ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
 
 
 @dp.message(Command("commit_force"))
