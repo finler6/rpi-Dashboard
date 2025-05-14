@@ -155,7 +155,7 @@ async def status_handler(message: Message):
 async def update_site_handler(message: Message):
     try:
         result = subprocess.run(
-            ["/usr/local/bin/update-portfolio.sh"],
+            ["/home/finler6/portfolio-site/update.sh"],
             capture_output=True,
             text=True
         )
