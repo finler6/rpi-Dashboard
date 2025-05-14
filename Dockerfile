@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y \
     iproute2 \
     smartmontools \
     git \
-    openssh-client
+    openssh-client \
+    docker.io
 
 WORKDIR /app
 
