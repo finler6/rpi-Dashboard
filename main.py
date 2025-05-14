@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from aiogram.filters import Command
 from os import getenv, popen
 from dotenv import load_dotenv
@@ -16,7 +16,8 @@ load_dotenv()
 TOKEN = getenv("BOT_TOKEN")
 MY_ID = int(getenv("MY_ID"))
 
-bot = Bot(token=TOKEN)
+pending_update_confirmation = {}
+
 dp = Dispatcher()
 
 #----------Addons-------------
@@ -100,9 +101,9 @@ async def start_handler(message: Message):
         "👋 Hello! I'm your Raspberry Pi status bot.\n\n"
         "📋 <b>Available Commands:</b>\n"
         "• /status — Show system status\n"
-        "• /update_site — Pull latest version and restart site\n"
-        "• /disk_temp — Show disk temperature\n"
-        "• /commit_force &lt;message&gt; — Force-push commit with message"
+        "• /update_site — 🔄 Pull latest version and restart site\n"
+        "• /disk_temp — ❄️ Show disk temperature\n"
+        "• /commit_force &lt;message&gt; — 🚀 Force-push commit with message"
     )
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 
@@ -142,36 +143,38 @@ async def status_handler(message: Message):
 
 @dp.message(Command("update_site"))
 @only_owner
-async def update_site_handler(message: Message):
+async def update_site_prompt(message: Message):
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Yes"), KeyboardButton(text="No")]
-        ],
-        resize_keyboard=True
+        keyboard=[[KeyboardButton(text="✅ Yes"), KeyboardButton(text="❌ No")]],
+        resize_keyboard=True,
+        one_time_keyboard=True
     )
-    await message.answer("⚙️ Are you sure you want to update the site?", reply_markup=keyboard)
+    pending_update_confirmation[message.from_user.id] = True
+    await message.answer("Are you sure you want to update the site?", reply_markup=keyboard)
 
-@dp.message(lambda msg: msg.text == "Yes")
+@dp.message()
 @only_owner
-async def confirm_update_handler(message: Message):
-    try:
-        result = subprocess.run([
-            "/home/finler6/portfolio-site/update.sh"
-        ], capture_output=True, text=True)
-        output = result.stdout + "\n" + result.stderr
-        if len(output) > 4000:
-            output = output[:4000] + "\n... (output truncated)"
-        if result.returncode == 0:
-            await message.answer(f"✅ Site updated:\n<code>{output}</code>", parse_mode="HTML")
-        else:
-            await message.answer(f"❌ Update failed (code {result.returncode}):\n<code>{output}</code>", parse_mode="HTML")
-    except Exception as e:
-        await message.answer(f"❌ Unexpected error:\n<code>{str(e)}</code>", parse_mode="HTML")
-
-@dp.message(lambda msg: msg.text == "No")
-@only_owner
-async def cancel_update_handler(message: Message):
-    await message.answer("❎ Update cancelled.")
+async def handle_confirmation(message: Message):
+    if pending_update_confirmation.get(message.from_user.id):
+        if message.text == "✅ Yes":
+            try:
+                result = subprocess.run(
+                    ["/home/finler6/portfolio-site/update.sh"],
+                    capture_output=True,
+                    text=True
+                )
+                output = result.stdout + "\n" + result.stderr
+                if len(output) > 1000:
+                    output = output[:1000] + "\n... (output truncated)"
+                if result.returncode == 0:
+                    await message.answer(f"✅ Site updated:\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+                else:
+                    await message.answer(f"❌ Update failed (code {result.returncode}):\n<code>{output}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+            except Exception as e:
+                await message.answer(f"❌ Unexpected error:\n<code>{str(e)}</code>", reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+        elif message.text == "❌ No":
+            await message.answer("Update cancelled.", reply_markup=ReplyKeyboardRemove())
+        del pending_update_confirmation[message.from_user.id]
 
 @dp.message(Command("commit_force"))
 @only_owner
@@ -193,6 +196,7 @@ async def commit_force_handler(message: Message):
         await message.answer(f"❌ Commit error:\n<code>{e}</code>", parse_mode="HTML")
 
 async def main():
+    bot = Bot(token=TOKEN)
     asyncio.create_task(temperature_watcher(bot, threshold=60.0, chat_id=MY_ID))
     asyncio.create_task(wifi_status(bot, chat_id=MY_ID))
     await dp.start_polling(bot)
