@@ -93,7 +93,8 @@ async def start_handler(message: Message):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="/status"), KeyboardButton(text="/update_site")],
-            [KeyboardButton(text="/disk_temp"), KeyboardButton(text="/commit_force <message>")]
+            [KeyboardButton(text="/disk_temp"), KeyboardButton(text="/commit_force <message>")],
+            [KeyboardButton(text="/exec <command>")]
         ],
         resize_keyboard=True
     )
@@ -103,7 +104,8 @@ async def start_handler(message: Message):
         "• /status — Show system status\n"
         "• /update_site — 🔄 Pull latest version and restart site\n"
         "• /disk_temp — ❄️ Show disk temperature\n"
-        "• /commit_force &lt;message&gt; — 🚀 Force-push commit with message"
+        "• /commit_force &lt;message&gt; — 🚀 Force-push commit with message\n"
+        "• /exec &lt;command&gt; — 🧪 Execute a shell command"
     )
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 
@@ -194,6 +196,21 @@ async def commit_force_handler(message: Message):
         await message.answer("✅ Force-push to <code>rpi-commits</code> completed.", parse_mode="HTML")
     except subprocess.CalledProcessError as e:
         await message.answer(f"❌ Commit error:\n<code>{e}</code>", parse_mode="HTML")
+
+@dp.message(Command("exec"))
+@only_owner
+async def exec_handler(message: Message):
+    cmd = message.text.replace("/exec", "").strip()
+    if not cmd:
+        await message.answer("❗ Please provide a command: /exec <command>")
+        return
+    try:
+        output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
+        if len(output) > 4000:
+            output = output[:4000] + "\n... (output truncated)"
+        await message.answer(f"🧪 <b>Result:</b>\n<code>{output.strip()}</code>", parse_mode="HTML")
+    except subprocess.CalledProcessError as e:
+        await message.answer(f"❌ Execution error:\n<code>{e.output.decode()}</code>", parse_mode="HTML")
 
 async def main():
     bot = Bot(token=TOKEN)
