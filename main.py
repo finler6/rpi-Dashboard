@@ -88,19 +88,24 @@ async def wifi_status(bot: Bot, chat_id: int):
 @dp.message(Command("start"))
 @only_owner
 async def start_handler(message: Message):
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(KeyboardButton("/status"), KeyboardButton("/update_site"))
-    keyboard.add(KeyboardButton("/disk_temp"), KeyboardButton("/commit_force <message>"))
-
-    help_text = (
-        "👋 Hello, master!\n\n"
-        "Available commands:\n"
-        "/status — Show system status\n"
-        "/update_site — Pull changes and rebuild site\n"
-        "/disk_temp — Show disk temperature\n"
-        "/commit_force <msg> — Force commit to GitHub (message required)"
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="/status"), KeyboardButton(text="/update_site")],
+            [KeyboardButton(text="/disk_temp"), KeyboardButton(text="/commit_force <message>")]
+        ],
+        resize_keyboard=True
     )
-    await message.answer(help_text, reply_markup=keyboard)
+
+    text = (
+        "👋 Hello! I'm your Raspberry Pi status bot.\n\n"
+        "📋 <b>Available Commands:</b>\n"
+        "• /status — Show system status\n"
+        "• /update_site — Pull latest version and restart site\n"
+        "• /disk_temp — Show disk temperature\n"
+        "• /commit_force <msg> — Force-push commit with message"
+    )
+
+    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 
 @dp.message(Command("disk_temp"))
 @only_owner
