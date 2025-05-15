@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  status-bot:
+    build: .
+    container_name: status-bot
+    env_file:
+      - .env
+    network_mode: host
+    privileged: true
+    volumes:
+      - /sys:/sys:ro
+      - /proc:/proc:ro
+      - /dev:/dev
+      - /home/finler6/ssh-bot-key/PCkeys:/root/.ssh:ro
+      - /home/finler6/portfolio-site:/home/finler6/portfolio-site
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
