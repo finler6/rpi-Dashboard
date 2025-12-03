@@ -12,8 +12,7 @@ services:
       - /sys:/sys:ro
       - /proc:/proc:ro
       - /dev:/dev
-      - /home/finler6/ssh-bot-key/PCkeys:/root/.ssh:ro
-      - /home/finler6/portfolio-site:/home/finler6/portfolio-site
+      - ${SSH_KEY_VOLUME:-/opt/ssh-keys}:${SSH_KEY_CONTAINER_PATH:-/root/.ssh}:ro
+      - ${SITE_REPO_VOLUME:-/srv/site}:${SITE_REPO_CONTAINER_PATH:-/srv/site}
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
-
