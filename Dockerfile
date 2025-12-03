@@ -1,27 +1,32 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    iproute2 \
-    smartmontools \
-    git \
+    ffmpeg \
+    python3-dev \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
     curl \
-    openssh-client
-
-RUN curl -fsSL https://download.docker.com/linux/static/stable/$(uname -m)/docker-24.0.6.tgz | tar xz && \
-    mv docker/* /usr/bin/
-
-RUN mkdir -p /usr/libexec/docker/cli-plugins && \
-    curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-$(uname -m) \
-    -o /usr/libexec/docker/cli-plugins/docker-compose && \
-    chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY . .
+COPY requirements.txt .
+COPY *.py ./
+COPY known_hosts .
 
-RUN git config --global user.name "FinlerBot" \
- && git config --global user.email "bot@finler.local"
+RUN mkdir -p downloads && chmod 777 downloads
 
 RUN pip install --no-cache-dir -r requirements.txt
+
+ENV PYTHONHTTPSVERIFY=0
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+ENV INSTAGRAM_USERNAME=""
+ENV INSTAGRAM_PASSWORD=""
+
+RUN update-ca-certificates
 
 CMD ["python", "main.py"]
