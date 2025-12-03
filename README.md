@@ -15,6 +15,14 @@ Status Bot is a private Telegram assistant that keeps a Raspberry Pi and a deskt
 - Unauthorized messages are appended to the log file, and the rotating cleaner keeps the file from exposing old data.
 - `/exec` remains enabled for convenience, so keep the bot token and Telegram account secure; anyone with full access to either could run arbitrary shell commands.
 
+## Configuration
+Key environment variables (set them in `.env` or your orchestrator):
+- `SSH_USER`, `SSH_KEY_PATH`, and `PC_IP`/`PC_MAC` — remote host credentials for WOL + SSH; `SSH_KEY_PATH` must exist within the container.
+- `WEBUI_BASE` — path to the remote WebUI helper scripts.
+- `UPDATE_SCRIPT_PATH` — absolute path inside the container to the site update script (ensure the volume mount matches).
+- `WAKE_TRIGGER_BASE` — base URL (without the `?key=` suffix) for the wake trigger endpoint; combined with `SECRET_KEY` at runtime.
+- `SSH_KEY_VOLUME`/`SSH_KEY_CONTAINER_PATH` and `SITE_REPO_VOLUME`/`SITE_REPO_CONTAINER_PATH` — docker-compose volume pairs so you can map host paths without exposing them in source control.
+
 ## Getting Started
 1. Install Python 3.11 (or build the Docker image) and install dependencies with `pip install -r requirements.txt`.
 2. Provide the required environment variables (Telegram token, `MY_ID`, SSH/PC details, OpenWeather and currency keys, log file path, etc.) via `.env` or your container orchestration.

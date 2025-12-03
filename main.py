@@ -20,14 +20,27 @@ from social_media import SocialMediaDownloader
 
 load_dotenv()
 
-TOKEN = getenv("BOT_TOKEN")
-MY_ID = int(getenv("MY_ID"))
-PC_MAC = getenv("PC_MAC")
-PC_IP = getenv("PC_IP")
-SECRET_KEY = getenv("SECRET_KEY")
+
+def require_env(name: str) -> str:
+    value = getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
+TOKEN = require_env("BOT_TOKEN")
+MY_ID = int(require_env("MY_ID"))
+PC_MAC = require_env("PC_MAC")
+PC_IP = require_env("PC_IP")
+SECRET_KEY = require_env("SECRET_KEY")
 OPENWEATHER_KEY = getenv("OPENWEATHER_KEY")
 CITY_ID = getenv("CITY_ID")
-LOG_FILE_PATH = getenv("LOG_FILE_PATH")
+LOG_FILE_PATH = require_env("LOG_FILE_PATH")
+SSH_KEY = require_env("SSH_KEY_PATH")
+SSH_USER = require_env("SSH_USER")
+WEBUI_BASE = require_env("WEBUI_BASE")
+UPDATE_SCRIPT_PATH = require_env("UPDATE_SCRIPT_PATH")
+WAKE_TRIGGER_BASE = require_env("WAKE_TRIGGER_BASE")
 
 log_dir = path.dirname(LOG_FILE_PATH)
 
@@ -43,15 +56,13 @@ dp = Dispatcher()
 
 
 # ---- WebUI remote control helpers ----
-SSH_KEY = "/root/.ssh/myPc_ed25519"
-SSH_USER = "finler6"
-WEBUI_BASE = "/mnt/c/Users/finle/Desktop/testAI/stable-diffusion-webui"
+SSH_TARGET = f"{SSH_USER}@{PC_IP}"
 
 def ssh_run_raw(cmd, timeout=30):
     full_cmd = [
         "ssh",
         "-i", SSH_KEY,
-        f"{SSH_USER}@{PC_IP}",
+        SSH_TARGET,
         "bash",
         "-lc",
         cmd
@@ -225,7 +236,7 @@ async def log_cleaner():
             f.write(f"[{datetime.now()}] Log file auto-cleared.\n")
 
 async def morning_trigger_listener(bot: Bot):
-    url = f"https://lit.vinch.uk/api/wake-trigger?key={SECRET_KEY}"
+    url = f"{WAKE_TRIGGER_BASE}?key={SECRET_KEY}"
     while True:
         try:
             res = requests.get(url, timeout=5)
@@ -320,8 +331,8 @@ async def start_pc_handler(message: Message):
 
         result = subprocess.run(
             [
-                "ssh", "-i", "/root/.ssh/myPc_ed25519",
-                "finler6@192.168.1.126",
+                "ssh", "-i", SSH_KEY,
+                SSH_TARGET,
                 "powershell -Command \"Get-CimInstance Win32_Processor | Select-Object -ExpandProperty LoadPercentage; "
                 "Get-CimInstance Win32_OperatingSystem | ForEach-Object { $_.TotalVisibleMemorySize, $_.FreePhysicalMemory }; "
                 "(Get-Counter '\\GPU Engine(*)\\Utilization Percentage').CounterSamples | "
@@ -356,8 +367,8 @@ async def shutdown_pc_handler(message: Message):
         result = subprocess.run(
             [
                 "ssh",
-                "-i", "/root/.ssh/myPc_ed25519",
-                "finler6@192.168.1.126",
+                "-i", SSH_KEY,
+                SSH_TARGET,
                 "shutdown", "/s", "/t", "0"
             ],
             capture_output=True,
@@ -385,8 +396,8 @@ async def lock_pc_handler(message: Message):
     try:
         result = subprocess.run(
             [
-                "ssh", "-i", "/root/.ssh/myPc_ed25519",
-                f"finler6@{PC_IP}",
+                "ssh", "-i", SSH_KEY,
+                SSH_TARGET,
                 "schtasks", "/run", "/tn", "LockNow"
             ],
             stdout=subprocess.PIPE,
@@ -746,7 +757,7 @@ async def handle_confirmation(message: Message):
     if message.text == "✅ Yes":
         try:
             result = subprocess.run(
-                ["/home/finler6/portfolio-site/update.sh"],
+                [UPDATE_SCRIPT_PATH],
                 capture_output=True,
                 text=True
             )
