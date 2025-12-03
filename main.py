@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, FSInputFile
 from aiogram.filters import Command
@@ -240,18 +241,9 @@ async def morning_trigger_listener(bot: Bot):
 
 async def send_morning_info(bot: Bot):
     now = datetime.now()
-    weekday_map = {
-    'Monday': 'Понедельник',
-    'Tuesday': 'Вторник',
-    'Wednesday': 'Среда',
-    'Thursday': 'Четверг',
-    'Friday': 'Пятница',
-    'Saturday': 'Суббота',
-    'Sunday': 'Воскресенье'
-    }
     weekday_en = now.strftime('%A')
-    weekday_ru = weekday_map.get(weekday_en, '')
-    msg = f"👋 Good morning!\n📅 Today is {weekday_en} ({weekday_ru}), {now.strftime('%d %B %Y')}\n\n"
+    date_str = now.strftime('%d %B %Y')
+    msg = f"👋 Good morning!\n📅 Today is {weekday_en}, {date_str}\n\n"
 
 
     if is_pc_online():
@@ -448,7 +440,7 @@ async def webui_start_handler(message: Message):
     if rc == 0:
         await message.answer(f"✅ Command send\n{out or 'OK'}")
     else:
-        txt = f"❌ Ошибка запуска (rc={rc}).\nOUT:\n{out}\nERR:\n{err}"
+        txt = f"❌ Start error (rc={rc}).\nOUT:\n{out}\nERR:\n{err}"
         await message.answer(txt)
 
 @dp.message(Command("webui_stop"))
@@ -464,7 +456,7 @@ async def webui_stop_handler(message: Message):
 @dp.message(Command("webui_status"))
 @only_owner
 async def webui_status_handler(message: Message):
-    await message.answer("🔎 Проверяю статус WebUI...")
+    await message.answer("🔎 Checking WebUI status...")
     rc, out, err = ssh_run_script("status_webui_wsl.sh", timeout=10)
     if rc == 0:
         await message.answer(f"ℹ️ Status:\n<pre>{out}</pre>", parse_mode="HTML")
@@ -487,14 +479,14 @@ async def webui_log_handler(message: Message):
             out = "...(truncated)...\n" + out
         await message.answer(f"<pre>{out}</pre>", parse_mode="HTML")
     else:
-        await message.answer(f"Ошибка чтения лога: <code>{err}</code>", parse_mode="HTML")
+        await message.answer(f"Log read error: <code>{err}</code>", parse_mode="HTML")
 
 @dp.message(Command("webui_gen"))
 @only_owner
 async def webui_generate_handler(message: Message):
     prompt = message.text.replace("/webui_gen", "").strip()
     if not prompt:
-        await message.answer("❗ Prompt: /webui_gen <текст>")
+        await message.answer("❗ Prompt: /webui_gen <text>")
         return
     await message.answer("⏳ Send to generation. Wait...")
 
@@ -528,7 +520,7 @@ async def youtube_download_handler(message: Message):
         return
     
     try:
-        await message.answer("⏳ Video donwloading...")
+        await message.answer("⏳ Video downloading...")
         info = await downloader.download_youtube(url)
         
         if info and os.path.exists(info['filename']):
@@ -539,7 +531,7 @@ async def youtube_download_handler(message: Message):
         else:
             await message.answer("❌ Failed to load video")
     except Exception as e:
-        await message.answer(f"❌ Ошибка: {str(e)}")
+        await message.answer(f"❌ Error: {str(e)}")
     finally:
         downloader.cleanup_old_files()
 
@@ -558,7 +550,7 @@ async def tiktok_download_handler(message: Message):
         if info and os.path.exists(info['filename']):
             await message.answer_video(
                 video=FSInputFile(info['filename']),
-                caption=f"📱 TikTok видео\n⏱ Duration: {timedelta(seconds=info['duration'])}"
+                caption=f"📱 TikTok video\n⏱ Duration: {timedelta(seconds=info['duration'])}"
             )
         else:
             await message.answer("❌ Failed to load video")
@@ -576,7 +568,7 @@ async def instagram_download_handler(message: Message):
         return
     
     try:
-        await message.answer("⏳ Conten downloading...")
+        await message.answer("⏳ Content downloading...")
         info = await downloader.download_instagram(url)
         
         if info:
@@ -588,17 +580,17 @@ async def instagram_download_handler(message: Message):
                 if media_file.endswith(('.mp4')):
                     await message.answer_video(
                         video=FSInputFile(file_path),
-                        caption=f"📱 Instagram {info['type']}\n❤️ Лайков: {info.get('likes', 'N/A')}"
+                        caption=f"📱 Instagram {info['type']}\n❤️ Likes: {info.get('likes', 'N/A')}"
                     )
                 else:
                     await message.answer_photo(
                         photo=FSInputFile(file_path),
-                        caption=f"📱 Instagram {info['type']}\n❤️ Лайков: {info.get('likes', 'N/A')}"
+                        caption=f"📱 Instagram {info['type']}\n❤️ Likes: {info.get('likes', 'N/A')}"
                     )
         else:
             await message.answer("❌ Failed")
     except Exception as e:
-        await message.answer(f"❌ Ошибка: {str(e)}")
+        await message.answer(f"❌ Error: {str(e)}")
     finally:
         downloader.cleanup_old_files()
 
